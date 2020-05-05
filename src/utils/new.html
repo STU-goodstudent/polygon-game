@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<!-- 随机一个数组(手动输入数组位数，min及max) -->
+	<script>
+	    function selectRandom (num, min, max) {
+	      let arr = [];
+	      let json = {};
+	      let needNum;
+
+	      if (min - max >= 0) {
+	        console.log(111)
+	        return '起始值要小于末尾值'
+	      }
+
+	      if (max - min == max) {
+	        needNum = parseInt(max) + 1;
+	      } else {
+	        needNum = max - min;
+	      }
+	      if (num > needNum) {
+	        return
+	      } else {
+	        while (arr.length < num) {
+	          let ranNum = Math.ceil(Math.random() * needNum);
+	          if (!json[ranNum]) {
+	            json[ranNum] = 1;
+	            arr.push(ranNum)
+	          }
+	        }
+	        return arr;
+	      }
+	    }
+	    console.log(selectRandom(6, 0, 20))
+	</script>
+	<!-- 随机运算符 -->
+	<script>
+		function  randomChar(l)  {
+			var  x ="+-*/";
+			var arr = [];
+			var  tmp ="";
+			for(var  i=0;i< l;i++)  {
+				if (true){
+					tmp+=x.charAt(Math.ceil(Math.random()*100000000)%x.length);
+					arr.push(tmp);
+					}
+
+				tmp = "";
+			}
+			
+		return arr;
+		}
+		console.log(randomChar(5));
+	</script>
+	
+</body>
+</html>

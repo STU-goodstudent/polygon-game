@@ -8,7 +8,11 @@
     >
       Your browser does not support the canvas element.
     </canvas>
-    <button @click="destroy"></button>
+    <br>
+    <button @click="destroy">删除第一条边</button>
+    <button @click="destroy0">删除边0</button>
+    <button @click="destroy1">删除边1</button>
+    <button @click="withdraw">撤回一步</button>
   </div>
 </template>
 
@@ -36,6 +40,21 @@ export default {
     destroy () {
       if (this.polygon) {
         this.polygon.deleteEdge(0, true)
+      }
+    },
+    destroy0 () {
+      if (this.polygon) {
+        this.polygon.deleteEdge(0)
+      }
+    },
+    destroy1 () {
+      if (this.polygon) {
+        this.polygon.deleteEdge(1)
+      }
+    },
+    withdraw () {
+      if (this.polygon) {
+        this.polygon.withdraw()
       }
     }
   }

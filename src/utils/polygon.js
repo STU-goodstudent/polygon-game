@@ -13,7 +13,7 @@ class Polygon {
    * points: Array 点集
    * edges: Array 边集
    */
-  constructor ({ ele, width = 500, height = 300, number = 4, points = null, edges = null }) {
+  constructor ({ ele, width = 500, height = 300, number = 3, points = null, edges = null }) {
     // 获取canvas元素和context
     this.canvas = document.getElementById(ele)
     this.canvas.width = width
@@ -21,12 +21,13 @@ class Polygon {
     this.context = this.canvas.getContext('2d')
 
     // 游戏初始数据
-    this.number = number
-    points = points || [2, 3, 4, 5]
+    // this.number = number
+    points = points || [0, 1, 2, 3, 4, 5]
+    this.number = points.length
     this.points = []
     points.forEach(ele => this.points.push({ value: ele, x: null, y: null }))
     // 边集 第0个表示第0个点和第1个点之间的边 ... 最后一个表示最后一个点和第0个点之间的边
-    edges = edges || ['＋', '×', '＋', '×']
+    edges = edges || ['＋', '×', '＋', '×', '×', '＋']
     this.edges = []
     edges.forEach((operation, i) => this.edges.push({ start: i, end: (i + 1) % this.number, operation }))
     /**
@@ -38,6 +39,7 @@ class Polygon {
 
     // 游戏中的数据
     this.delEdges = [] // 删除的边 集
+    this.delPoints = [] // 删除的点 集
 
     // 渲染
     this.calculatePosition()
@@ -45,26 +47,24 @@ class Polygon {
   }
 
   calculatePosition () {
+    const { canvas, points, number } = this
     // 计算中心点的坐标和多边形的半径
-    const centerX = parseInt(this.canvas.width / 2)
-    const centerY = parseInt(this.canvas.height / 2)
-    const radius = parseInt(Math.min(this.canvas.width, this.canvas.height) / 4)
+    const centerX = parseInt(canvas.width / 2)
+    const centerY = parseInt(canvas.height / 2)
+    const radius = parseInt(Math.min(canvas.width, canvas.height) / 4)
     // 计算每个点的位置
-    this.points.forEach((point, i) => {
-      point.x = centerX + radius * Math.cos(2 * i * Math.PI / this.number)
-      point.y = centerY + radius * Math.sin(2 * i * Math.PI / this.number)
+    points.forEach((point, i) => {
+      point.x = centerX + radius * Math.cos(2 * i * Math.PI / number)
+      point.y = centerY + radius * Math.sin(2 * i * Math.PI / number)
     })
   }
 
   // 图形 绘制
   draw () {
-    const { context, points, edges } = this
+    const { canvas, context, points, edges } = this
+    context.clearRect(0, 0, canvas.width, canvas.height)
     // 绘制多边形
     context.fillStyle = '#000'
-    // context.moveTo(points[0].x, points[0].y)
-    // for (let i = 1; i < this.number + 1; i++) {
-    //   context.lineTo(points[i % this.number].x, points[i % this.number].y)
-    // }
     edges.forEach(edge => {
       if (edge !== null) {
         context.moveTo(points[edge.start].x, points[edge.start].y)
@@ -89,14 +89,38 @@ class Polygon {
     })
   }
 
-  // 删除第一条边  index下标
+  // 删除边  index下标
   deleteEdge (index, isFirst = false) {
-    const { canvas, context, edges, delEdges } = this
-    context.clearRect(0, 0, canvas.width, canvas.height)
-    delEdges.push({ ...(edges[index]), oldIndex: index })
-    edges.splice(index, 1, null)
-    if (isFirst) {
-      // TODO
+    const { points, edges, delEdges, delPoints } = this
+    if (!edges.length) return
+    const delEdge = edges[index]
+    delEdges.push({ ...delEdge, oldIndex: index })
+    edges.splice(index, 1)
+    if (!isFirst) {
+      points[delEdge.end].value = delEdge.operation === '＋'
+        ? points[delEdge.start].value + points[delEdge.end].value
+        : points[delEdge.start].value * points[delEdge.end].value
+      delPoints.push({ ...(points[delEdge.start]), oldIndex: delEdge.start })
+      points.splice(delEdge.start, 1, null)
+      index && (edges[(index - 1 + edges.length) % edges.length].end = delEdge.end)
+    }
+    this.draw()
+  }
+
+  // 撤回一步
+  withdraw () {
+    const { points, edges, delEdges, delPoints } = this
+    if (delEdges.length === 0) return
+    const { oldIndex, ...delEdge } = delEdges.pop()
+    edges.splice(oldIndex, 0, delEdge)
+    oldIndex && (edges[(oldIndex - 1 + edges.length) % edges.length].end = delEdge.start)
+    if (delPoints.length !== 0) {
+      // 还原
+      const { oldIndex, ...point } = delPoints.pop()
+      points[oldIndex] = point
+      points[delEdge.end].value = delEdge.operation === '＋'
+        ? points[delEdge.end].value - point.value
+        : points[delEdge.end].value / point.value
     }
     this.draw()
   }
